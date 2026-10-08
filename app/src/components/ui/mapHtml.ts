@@ -8,6 +8,7 @@ export function mapHtml(lat: number, lon: number, zoom: number, interactive: boo
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>html,body,#m{margin:0;height:100%;background:#E3E7ED}.leaflet-control-attribution{font-size:9px}</style></head>
 <body><div id="m"></div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script>
+if(!window.L){document.getElementById('m').innerHTML='<div style="height:100%;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;font:600 12px system-ui;color:#5A6475">Map unavailable · ${lat.toFixed(4)}, ${lon.toFixed(4)}</div>';}else{
 var i=${interactive};
 var map=L.map('m',{zoomControl:i,dragging:i,scrollWheelZoom:i,doubleClickZoom:i,touchZoom:i,boxZoom:false,keyboard:false,attributionControl:true}).setView([${lat},${lon}],${zoom});
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
@@ -15,7 +16,7 @@ function send(){var c=map.getCenter();var msg=JSON.stringify({type:'center',lat:
  if(window.ReactNativeWebView)window.ReactNativeWebView.postMessage(msg);else if(window.parent)window.parent.postMessage(msg,'*');}
 map.on('moveend',send);
 window.addEventListener('message',function(e){try{var d=JSON.parse(e.data);if(d.type==='setView')map.setView([d.lat,d.lon],map.getZoom());}catch(_){}});
-</script></body></html>`;
+}</script></body></html>`;
 }
 
 export interface MapProps {

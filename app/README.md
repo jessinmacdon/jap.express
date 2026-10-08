@@ -1,56 +1,30 @@
-# Welcome to your Expo app 👋
+# JapExpress app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Expo (SDK 57) + Expo Router + TypeScript. Runs on iOS, Android and web from one codebase.
 
 ```bash
-npm run reset-project
+npm install
+npx expo start          # press i / a / w, or scan the QR code with Expo Go
+npx tsc --noEmit        # typecheck
+npx expo lint           # lint (set EXPO_OFFLINE=1 behind a restrictive proxy)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The API must be running (see `../server`). Sign in with **+237 6 77 12 34 56** and code **482913**.
 
-### Other setup steps
+## Layout
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+| Path | What |
+| --- | --- |
+| `src/app/` | Routes (every file is a screen). `(tabs)/` holds the bottom bar: Home, Saved, Activity, Inbox, Profile, plus the hidden `results` screen |
+| `src/app/auth/` | Phone → OTP → details → verification → done (sign-up), phone → OTP (sign-in) |
+| `src/components/ui/` | Design-system primitives: `Txt`, `Button`, `Chip`, `Segmented`, `Toggle`, `Field`, `SelectField`, `Sheet`, `Calendar`, `RangeSlider`, `MapView`, `Photo`… |
+| `src/components/` | Product components: listing cards, search bar, filter sheet, tab bar, payment rows, carousel |
+| `src/api/` | Typed fetch client, response types, React Query hooks |
+| `src/state/` | Session (token, profile, language), search (mode, place, dates, filters), UI (toast, filter sheet) |
+| `src/i18n/` | `en.json` / `fr.json` extracted verbatim from the design, plus `extra.ts` for strings the prototype didn't need |
+| `src/theme/tokens.ts` | Colours, radii, fonts from the design |
 
-## Learn more
+## Notes
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Maps are Leaflet + OpenStreetMap inside a WebView (iframe on web). The pin is fixed at the centre; dragging the map moves the spot. Swap the tile URL in `src/components/ui/mapHtml.ts` for a commercial provider before launch.
+- Photo uploads go through `src/lib/upload.ts` (presign → PUT). In development the API stores files locally.

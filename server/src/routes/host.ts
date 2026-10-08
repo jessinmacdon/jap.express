@@ -48,7 +48,12 @@ export default async function hostRoutes(app: FastifyInstance) {
         prisma.booking.aggregate({ _sum: { hostPayout: true }, where: { rental: { hostId: uid }, status: { in: [...EARNING] } } }),
         prisma.booking.aggregate({ _sum: { hostPayout: true }, where: { rental: { hostId: uid }, status: { in: [...EARNING] }, startDate: { gte: monthStart } } }),
         prisma.payout.aggregate({ _sum: { amount: true }, where: { hostId: uid, status: { in: ['pending', 'sent'] } } }),
-        prisma.booking.findMany({ where: { rental: { hostId: uid }, status: { in: ['requested', 'confirmed', 'declined'] }, startDate: { gte: parseDay(isoDay(new Date())) } }, include: { renter: true, rental: true }, orderBy: { createdAt: 'desc' } }),
+        prisma.booking.findMany({ where: {
+            rental: { hostId: uid },
+            startDate: { gte: parseDay(isoDay(new Date())) },
+            // Pending requests, plus ones the host decided in the last day so the outcome stays visible.
+            OR: [{ status: 'requested' }, { status: { in: ['confirmed', 'declined'] }, updatedAt: { gte: new Date(Date.now() - 86_400_000) } }],
+          }, include: { renter: true, rental: true }, orderBy: { createdAt: 'desc' } }),
         prisma.rentalListing.findMany({ where: { hostId: uid }, include: { bookings: { where: { status: { in: ['confirmed', 'in_progress'] }, endDate: { gte: new Date() } }, orderBy: { startDate: 'asc' }, take: 1 } } }),
         prisma.saleListing.findMany({ where: { sellerId: uid } }),
       ]);

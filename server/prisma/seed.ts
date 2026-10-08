@@ -243,8 +243,9 @@ async function main() {
   // Nadine as host: pending requests…
   await booking({ rental: rid.n2, renter: yannick.id, start: 10, days: 4, status: 'requested', note: 'Visiting family in Bonamoussadi for the holidays.', ref: 'JX-50121' });
   await booking({ rental: rid.n1, renter: laure.id, start: 16, days: 2, status: 'requested', note: 'Wedding in Bonabéri, I need a car for the weekend.', ref: 'JX-50122' });
-  // …a confirmed upcoming booking on the Yaris…
-  await booking({ rental: rid.n1, renter: yannick.id, start: 4, days: 3, status: 'confirmed', ref: 'JX-49980', hostPayout: 485000 });
+  // …a trip completed earlier this month (this month's earnings)…
+  const monthStartOffset = 1 - today.getUTCDate();
+  await booking({ rental: rid.n1, renter: yannick.id, start: monthStartOffset, days: 3, status: 'completed', ref: 'JX-49980', hostPayout: 485000 });
   // …and history that adds up to the dashboard figures (3 870 000 earned, 412 000 available).
   await booking({ rental: rid.n2, renter: laure.id, start: -120, days: 60, status: 'completed', ref: 'JX-20011', hostPayout: 3870000 - 485000 });
   await prisma.payout.create({ data: { hostId: nadine.id, amount: 3870000 - 412000, method: 'mtn_momo', msisdn: '+237677123456', status: 'sent', providerRef: 'seed' } });
