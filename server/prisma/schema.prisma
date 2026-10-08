@@ -1,0 +1,432 @@
+// JapExpress data model.
+// Two marketplaces share one account system:
+//  - Rentals: peer-to-peer, paid per booking. Money (rent, fee, deposit) goes through JapExpress.
+//  - Sales: classifieds, paid per listing (Basic / Featured package). Buyer and seller deal directly.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Lang {
+  en
+  fr
+}
+
+enum VerificationStatus {
+  todo
+  checking
+  done
+  rejected
+}
+
+enum SellerType {
+  private
+  dealer
+}
+
+enum Transmission {
+  auto
+  manual
+}
+
+enum Fuel {
+  petrol
+  diesel
+  hybrid
+  electric
+}
+
+enum Condition {
+  new
+  excellent
+  good
+  fair
+}
+
+enum ListingStatus {
+  draft
+  pending_payment
+  active
+  paused
+  expired
+  sold
+}
+
+enum BookingStatus {
+  requested // waiting for the host to accept
+  accepted // host accepted, waiting for payment
+  confirmed // paid
+  declined
+  cancelled
+  in_progress
+  completed
+}
+
+enum PaymentMethod {
+  mtn_momo
+  orange_money
+  card
+  paypal
+}
+
+enum PaymentStatus {
+  pending
+  succeeded
+  failed
+  refunded
+}
+
+enum PaymentPurpose {
+  booking
+  listing_package
+}
+
+enum ListingPackage {
+  basic
+  featured
+}
+
+enum OfferStatus {
+  pending
+  countered
+  accepted
+  declined
+  withdrawn
+}
+
+enum PayoutStatus {
+  pending
+  sent
+  failed
+}
+
+enum ListingKind {
+  rent
+  sale
+}
+
+model User {
+  id            String   @id @default(cuid())
+  phone         String   @unique // E.164, e.g. +237677123456
+  firstName     String?
+  lastName      String?
+  email         String?
+  lang          Lang     @default(en)
+  autoTranslate Boolean  @default(true)
+  goals         String[] // rent | buy | host | sell
+  homeLabel     String? // "Paris → Douala"
+  avatarUrl     String?
+
+  // Verification (phone is verified by OTP at sign-up)
+  phoneVerifiedAt DateTime?
+  idStatus        VerificationStatus @default(todo)
+  licenceStatus   VerificationStatus @default(todo)
+  selfieStatus    VerificationStatus @default(todo)
+
+  // Seller / host profile
+  sellerType    SellerType @default(private)
+  businessName  String?
+  areaLabel     String? // "Akwa, Douala"
+  payoutMethod  PaymentMethod?
+  payoutMsisdn  String?
+  responseNote  String? // "Usually replies in 10 min"
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rentals        RentalListing[]
+  sales          SaleListing[]
+  bookings       Booking[]        @relation("renter")
+  offers         Offer[]          @relation("buyer")
+  favourites     Favourite[]
+  participations Participant[]
+  messages       Message[]
+  notifications  Notification[]
+  payouts        Payout[]
+  payments       Payment[]
+  documents      VerificationDocument[]
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}
+
+model VerificationDocument {
+  id         String             @id @default(cuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind       String // id | licence | selfie
+  fileUrls   String[]
+  status     VerificationStatus @default(checking)
+  reviewNote String?
+  createdAt  DateTime           @default(now())
+}
+
+model RentalListing {
+  id           String        @id @default(cuid())
+  hostId       String
+  host         User          @relation(fields: [hostId], references: [id])
+  status       ListingStatus @default(active)
+  make         String
+  model        String
+  year         Int
+  mileageKm    Int?
+  condition    Condition     @default(good)
+  city         String
+  seats        Int
+  transmission Transmission
+  fuel         Fuel
+  dailyRate    Int // FCFA
+  deposit      Int           @default(100000)
+  weeklyDiscount Boolean     @default(false)
+
+  // Delivery options
+  deliveryAirport    Boolean @default(false)
+  deliveryAirportFee Int     @default(5000)
+  deliveryCity       Boolean @default(false)
+  deliveryCityFee    Int     @default(3000)
+
+  // Pick-up spot placed by the host on the map
+  pickupLat     Float
+  pickupLon     Float
+  pickupAddress String
+  pickupNote    String?
+
+  description     String?
+  descriptionLang Lang    @default(fr)
+  photos          String[] // URLs; first is the cover
+
+  rating     Float   @default(0)
+  tripsCount Int     @default(0)
+  featured   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  blocked  BlockedDate[]
+  bookings Booking[]
+
+  @@index([city, status])
+}
+
+model BlockedDate {
+  id       String        @id @default(cuid())
+  rentalId String
+  rental   RentalListing @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  date     DateTime      @db.Date
+
+  @@unique([rentalId, date])
+}
+
+model SaleListing {
+  id           String        @id @default(cuid())
+  sellerId     String
+  seller       User          @relation(fields: [sellerId], references: [id])
+  status       ListingStatus @default(active)
+  make         String
+  model        String
+  variant      String
+  year         Int
+  mileageKm    Int
+  fuel         Fuel
+  transmission Transmission
+  color        String
+  condition    Condition
+  seats        Int
+  price        Int // FCFA
+  negotiable   Boolean @default(false)
+  city         String
+
+  // Viewing spot
+  viewLat     Float
+  viewLon     Float
+  viewAddress String
+  viewingDays String[] // mon..sun
+
+  description     String?
+  descriptionLang Lang    @default(en)
+  photos          String[]
+  views           Int     @default(0)
+
+  package   ListingPackage @default(basic)
+  expiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  offers Offer[]
+
+  @@index([city, status])
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  reference   String        @unique // JX-48213
+  rentalId    String
+  rental      RentalListing @relation(fields: [rentalId], references: [id])
+  renterId    String
+  renter      User          @relation("renter", fields: [renterId], references: [id])
+  status      BookingStatus @default(requested)
+  startDate   DateTime      @db.Date
+  endDate     DateTime      @db.Date
+  days        Int
+  delivery    Boolean       @default(false)
+  deliveryTo  String? // dla | nsi | free text
+  note        String? // message to the host
+
+  dailyRate   Int
+  subtotal    Int
+  deliveryFee Int
+  platformFee Int
+  deposit     Int
+  total       Int
+  hostPayout  Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([renterId])
+  @@index([rentalId, status])
+}
+
+model Payment {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id])
+  purpose       PaymentPurpose
+  bookingId     String?
+  booking       Booking?       @relation(fields: [bookingId], references: [id])
+  saleListingId String?
+  method        PaymentMethod
+  msisdn        String?
+  amount        Int
+  currency      String         @default("XAF")
+  status        PaymentStatus  @default(pending)
+  providerRef   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model Payout {
+  id        String        @id @default(cuid())
+  hostId    String
+  host      User          @relation(fields: [hostId], references: [id])
+  amount    Int
+  method    PaymentMethod
+  msisdn    String
+  status    PayoutStatus  @default(pending)
+  providerRef String?
+  createdAt DateTime      @default(now())
+}
+
+model Offer {
+  id            String      @id @default(cuid())
+  saleListingId String
+  sale          SaleListing @relation(fields: [saleListingId], references: [id])
+  buyerId       String
+  buyer         User        @relation("buyer", fields: [buyerId], references: [id])
+  amount        Int
+  counterAmount Int?
+  status        OfferStatus @default(pending)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Favourite {
+  id        String      @id @default(cuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      ListingKind
+  listingId String
+  createdAt DateTime    @default(now())
+
+  @@unique([userId, kind, listingId])
+}
+
+model Conversation {
+  id            String        @id @default(cuid())
+  kind          ListingKind
+  listingId     String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  participants  Participant[]
+  messages      Message[]
+}
+
+model Participant {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  lastReadAt     DateTime?
+
+  @@unique([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  text           String?
+  lang           Lang
+  imageUrl       String?
+  createdAt      DateTime     @default(now())
+  translations   MessageTranslation[]
+
+  @@index([conversationId, createdAt])
+}
+
+// Cache of machine translations so each message is translated once per language.
+model MessageTranslation {
+  id        String  @id @default(cuid())
+  messageId String
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  lang      Lang
+  text      String
+
+  @@unique([messageId, lang])
+}
+
+// Same idea for listing descriptions (key = "rent:<id>" | "sale:<id>").
+model ListingTranslation {
+  id         String @id @default(cuid())
+  listingKey String
+  lang       Lang
+  text       String
+
+  @@unique([listingKey, lang])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // booking_confirmed | offer_reply | price_drop | verification | booking_request
+  titleEn   String
+  titleFr   String
+  bodyEn    String
+  bodyFr    String
+  link      String? // app route, e.g. /activity?tab=offers
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
