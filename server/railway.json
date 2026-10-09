@@ -4,7 +4,7 @@
     "watchPatterns": ["server/**"]
   },
   "deploy": {
-    "preDeployCommand": ["npx prisma migrate deploy && npx tsx prisma/seed-if-empty.ts"],
+    "preDeployCommand": ["npm run deploy:prepare"],
     "startCommand": "npm start",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 120,

@@ -19,7 +19,7 @@ Allow about 20 minutes the first time. Steps 1–3 are once only.
    - **Source → Root Directory:** `/server`
    - **Build → Watch Paths:** `/server/**` (so app-only changes don't redeploy the API)
    - **Deploy → Custom Start Command:** `npm start`
-   - **Deploy → Pre-deploy Command:** `npx prisma migrate deploy && npx tsx prisma/seed-if-empty.ts`
+   - **Deploy → Pre-deploy Command:** `npm run deploy:prepare`
    - **Deploy → Healthcheck Path:** `/health`
    - Leave **Config-as-code → Railway Config File** empty (Railway deprecated config files; `server/railway.json` just documents these same values).
    - **Networking → Public Networking → Generate Domain** (accept the port Railway suggests; the server listens on whatever port Railway gives it). Copy the URL, e.g. `https://jap-express-production.up.railway.app`.

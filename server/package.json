@@ -12,7 +12,8 @@
     "db:reset": "prisma migrate reset --force",
     "generate": "prisma generate",
     "postinstall": "prisma generate",
-    "db:seed-if-empty": "tsx prisma/seed-if-empty.ts"
+    "db:seed-if-empty": "tsx prisma/seed-if-empty.ts",
+    "deploy:prepare": "prisma migrate deploy && tsx prisma/seed-if-empty.ts"
   },
   "dependencies": {
     "@fastify/cors": "^11.3.1",

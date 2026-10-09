@@ -7,7 +7,7 @@ const users = await prisma.user.count();
 await prisma.$disconnect();
 if (users === 0 || process.env.RESEED_DEMO === 'true') {
   console.info(users === 0 ? 'Empty database: loading demo data.' : 'RESEED_DEMO=true: reloading demo data.');
-  execFileSync('npx', ['tsx', 'prisma/seed.ts'], { stdio: 'inherit' });
+  execFileSync(process.execPath, ['--import', 'tsx', 'prisma/seed.ts'], { stdio: 'inherit' });
 } else {
   console.info(`Database has ${users} users: leaving data as is.`);
 }

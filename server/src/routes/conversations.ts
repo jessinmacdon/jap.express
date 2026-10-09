@@ -3,12 +3,11 @@ import { z } from 'zod';
 import { prisma } from '../db.ts';
 import { env } from '../env.ts';
 import type { Lang, ListingKind } from '../generated/prisma/client.ts';
+import { DEMO_PHONE_PREFIX } from '../lib/demo.ts';
 import { forbidden, notFound, parse, userId } from '../lib/http.ts';
 import { assetUrl, publicUser } from '../lib/serialize.ts';
 import { translateMessage } from '../services/translation.ts';
 
-// Seeded demo hosts/sellers use this phone prefix; with DEMO_AUTOREPLY=true they answer.
-export const DEMO_PHONE_PREFIX = '+2376990';
 
 const DEMO_REPLIES: Record<ListingKind, { lang: Lang; en: string; fr: string }[]> = {
   rent: [

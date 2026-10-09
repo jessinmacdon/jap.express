@@ -5,7 +5,7 @@ import { prisma } from '../src/db.ts';
 import type { Fuel, Lang, Transmission } from '../src/generated/prisma/client.ts';
 import { CITIES, type City } from '../src/lib/places.ts';
 import { quoteRental } from '../src/lib/pricing.ts';
-import { DEMO_PHONE_PREFIX } from '../src/routes/conversations.ts';
+import { DEMO_PHONE_PREFIX } from '../src/lib/demo.ts';
 
 const DAY = 86_400_000;
 const today = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate()));
