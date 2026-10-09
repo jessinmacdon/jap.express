@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import { post } from '@/api/client';
+import { authHeader, post } from '@/api/client';
 
 type Kind = 'listing_photo' | 'verification' | 'chat_image';
 
@@ -17,7 +17,7 @@ export async function pickAndUpload(kind: Kind, opts: { camera?: boolean } = {})
 export async function uploadUri(kind: Kind, uri: string, contentType: string) {
   const target = await post<{ uploadUrl: string; publicUrl: string }>('/uploads/presign', { kind, contentType });
   const blob = await (await fetch(uri)).blob();
-  const put = await fetch(target.uploadUrl, { method: 'PUT', headers: { 'content-type': contentType }, body: blob });
+  const put = await fetch(target.uploadUrl, { method: 'PUT', headers: { 'content-type': contentType, ...authHeader() }, body: blob });
   if (!put.ok) throw new Error('upload_failed');
   return target.publicUrl;
 }

@@ -146,3 +146,15 @@ describe('social', () => {
     expect(offers.body.items).toHaveLength(2);
   });
 });
+
+describe('uploads', () => {
+  it('only accepts presigned keys from signed-in users, once', async () => {
+    const t = await call('POST', '/uploads/presign', { kind: 'chat_image', contentType: 'image/jpeg' });
+    const put = (headers: Record<string, string>) => app.inject({ method: 'PUT', url: `/uploads/${t.body.key}`, payload: Buffer.from('fake-jpeg'), headers: { 'content-type': 'image/jpeg', ...headers } });
+    expect((await put({})).statusCode).toBe(401);
+    expect((await put({ authorization: `Bearer ${token}` })).statusCode).toBe(200);
+    expect((await put({ authorization: `Bearer ${token}` })).json().error).toBe('already_uploaded');
+    const bad = await app.inject({ method: 'PUT', url: '/uploads/../../etc/x', payload: Buffer.from('x'), headers: { 'content-type': 'image/jpeg', authorization: `Bearer ${token}` } });
+    expect(bad.statusCode).toBeGreaterThanOrEqual(400);
+  });
+});

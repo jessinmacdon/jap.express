@@ -2,7 +2,7 @@ import { createHash, randomInt } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { prisma } from '../db.ts';
-import { env, isProd } from '../env.ts';
+import { env } from '../env.ts';
 import { badRequest, HttpError, parse } from '../lib/http.ts';
 import { phoneInput, toE164 } from '../lib/phone.ts';
 import { me } from '../lib/serialize.ts';
@@ -31,7 +31,7 @@ export default async function authRoutes(app: FastifyInstance) {
     if (last && Date.now() - last.createdAt.getTime() < OTP_RESEND_MS && !last.usedAt) {
       return { phone, resendInSec: Math.ceil((OTP_RESEND_MS - (Date.now() - last.createdAt.getTime())) / 1000) };
     }
-    const code = !isProd && env.OTP_DEV_CODE ? env.OTP_DEV_CODE : String(randomInt(0, 1_000_000)).padStart(6, '0');
+    const code = env.OTP_DEV_CODE ?? String(randomInt(0, 1_000_000)).padStart(6, '0');
     await prisma.otpCode.create({ data: { phone, codeHash: hash(phone, code), expiresAt: new Date(Date.now() + OTP_TTL_MS) } });
     await sms.sendOtp(phone, code, body.lang);
     return { phone, resendInSec: OTP_RESEND_MS / 1000 };

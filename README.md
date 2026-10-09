@@ -6,8 +6,11 @@
 | --- | --- |
 | [`app/`](app/) | Mobile app: Expo SDK 57, Expo Router, TypeScript (iOS, Android, web) |
 | [`server/`](server/) | API: Fastify 5, Prisma 7, PostgreSQL, zod |
-| [`project/`](project/) | Claude Design handoff. `JapExpress v3.dc.html` is the source design |
-| [`chats/`](chats/) | Design conversation: the product decisions behind v3 |
+| [`docs/`](docs/) | Design handoff (`docs/design/`, source: `JapExpress v3.dc.html`), design conversations (`docs/chats/`) and decision records |
+
+## Test on your phone
+
+No computer setup needed: the API runs on Railway and the app opens in Expo Go. Follow [`docs/TESTING-ON-PHONES.md`](docs/TESTING-ON-PHONES.md). Decisions are logged in [`docs/decisions/`](docs/decisions/README.md).
 
 ## Run it locally
 
@@ -61,7 +64,7 @@ Each lives behind one interface on the server, with a `TODO` at the swap point:
 | Host payouts | Sandbox, marked sent immediately | same |
 | Translation | Seeded translations only; new text shows the original | `server/src/services/translation.ts` (DeepL / Google) |
 | ID / licence / selfie checks | Auto-approved after 1.3 s | `server/src/routes/me.ts` (e.g. Smile ID) |
-| File storage | Local `server/uploads/` | `server/src/services/storage.ts` (S3 / R2, private bucket for KYC) |
+| File storage | Local disk (`UPLOAD_DIR`; a Railway volume when hosted) | `server/src/services/storage.ts` (S3 / R2, private bucket for KYC) |
 | Real-time chat, push | Polling every 2.5 s; in-app notifications only | `app/src/api/hooks.ts`, `server/src/services/notify.ts` |
 | Map tiles | Public OpenStreetMap tiles | `app/src/components/ui/mapHtml.ts` |
 | Cancellations and refunds | Status change only | `POST /bookings/:id/cancel` |

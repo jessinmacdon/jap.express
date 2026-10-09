@@ -22,6 +22,7 @@ export class ApiError extends Error {
 
 let authToken: string | null = null;
 let onUnauthorized: (() => void) | null = null;
+export const authHeader = (): Record<string, string> => (authToken ? { authorization: `Bearer ${authToken}` } : {});
 export const setAuthToken = (t: string | null) => {
   authToken = t;
 };
