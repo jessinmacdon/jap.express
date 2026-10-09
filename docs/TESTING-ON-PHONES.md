@@ -17,7 +17,11 @@ Allow about 20 minutes the first time. Steps 1–3 are once only.
 3. In the project, click **+ Create** (or *New*) → **Database** → **PostgreSQL**. Wait until it is green.
 4. Click the **jap.express** service (not Postgres) → **Settings**:
    - **Source → Root Directory:** `/server`
-   - **Config-as-code → Railway Config File:** `/server/railway.json`
+   - **Build → Watch Paths:** `/server/**` (so app-only changes don't redeploy the API)
+   - **Deploy → Custom Start Command:** `npm start`
+   - **Deploy → Pre-deploy Command:** `npx prisma migrate deploy && npx tsx prisma/seed-if-empty.ts`
+   - **Deploy → Healthcheck Path:** `/health`
+   - Leave **Config-as-code → Railway Config File** empty (Railway deprecated config files; `server/railway.json` just documents these same values).
    - **Networking → Public Networking → Generate Domain** (accept the port Railway suggests; the server listens on whatever port Railway gives it). Copy the URL, e.g. `https://jap-express-production.up.railway.app`.
 5. Same service → **Variables** → **Raw Editor**, paste, then replace the JWT_SECRET value with any 40+ random characters:
    ```
