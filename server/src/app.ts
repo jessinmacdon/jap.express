@@ -29,6 +29,7 @@ export async function buildApp(opts: { logger?: boolean } = {}) {
   mkdirSync(UPLOAD_DIR, { recursive: true });
   await app.register(fastifyStatic, { root: UPLOAD_DIR, prefix: '/uploads/', decorateReply: false });
 
+  app.get('/', async () => ({ name: 'JapExpress API', ok: true, try: ['/health', '/rentals', '/sales', '/home'] }));
   app.get('/health', async () => ({ ok: true }));
 
   // Encapsulated route groups; each adds its own auth hooks where needed.
